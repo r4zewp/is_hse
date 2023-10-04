@@ -31,19 +31,19 @@ username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
 
 # Reading Private Key from file
-with open('private.txt', 'rb') as private_key_file:
-    private_key_pem = private_key_file.read()
-    private_key = serialization.load_pem_private_key(
-        private_key_pem,
+with open('private.txt', 'rb') as pkf:
+    private_pem = pkf.read()
+    private = serialization.load_pem_private_key(
+        private_pem,
         password=None, 
         backend=default_backend()
     )
 
 # Reading Public Key from file
-with open('pub.txt', 'rb') as public_key_file:
-    public_key_pem = public_key_file.read()
-    public_key = serialization.load_pem_public_key(
-        public_key_pem,
+with open('public.txt', 'rb') as pukf:
+    public_pem = pukf.read()
+    public = serialization.load_pem_public_key(
+        public_pem,
         backend=default_backend()
     )
 
@@ -59,7 +59,7 @@ while True:
         message = message.encode('utf-8')
 
         # Encrypting message
-        encrypted_message = public_key.encrypt(
+        encrypted = public.encrypt(
             message,
             padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
@@ -67,8 +67,8 @@ while True:
                 label=None
             )
         )
-        message_header = f"{len(encrypted_message):<{HEADER_LENGTH}}".encode('utf-8')
-        client_socket.send(message_header + encrypted_message)
+        message_header = f"{len(encrypted):<{HEADER_LENGTH}}".encode('utf-8')
+        client_socket.send(message_header + encrypted)
 
     try:
         # Now we want to loop over received messages (there might be more than one) and print them
@@ -94,7 +94,7 @@ while True:
             message = client_socket.recv(message_length)
 
             # Decrypting message
-            decrypted_message = private_key.decrypt(
+            decrypted = private.decrypt(
                 message,
                 padding.OAEP(
                     mgf=padding.MGF1(algorithm=hashes.SHA256()),
@@ -104,7 +104,7 @@ while True:
             )
 
             # Print message
-            print(f"{username} > {decrypted_message.decode('utf-8')}")
+            print(f"{username} > {decrypted.decode('utf-8')}")
 
     except IOError as e:
         # This is normal on non blocking connections - when there are no incoming data error is going to be raised
