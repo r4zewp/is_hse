@@ -6,7 +6,6 @@ from cryptography.fernet import Fernet
 
 HEADER_LENGTH = 10
 
-
 IP = "127.0.0.1"
 PORT = 1234
 my_username = input("Username: ")
@@ -28,10 +27,13 @@ username = my_username.encode('utf-8')
 username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
 
-with open("key.txt", "rb") as key_file:
-    key = key_file.read()
 
-cipher_suite = Fernet(key)
+# Creating file called "fernet.txt" cuz key is held there
+with open("fernet.txt", "rb") as kf:
+    key = kf.read()
+
+# Creating a Fernet Cipher Suite
+cipher = Fernet(key)
 
 
 
@@ -42,13 +44,15 @@ while True:
 
     # If message is not empty - send it
     if message:
-        # Шифрую сообщение симметрично, используя модуль Fernet.
-        # Дешифровка будет во втором while
         # Encode message to bytes, prepare header and convert to bytes, like for username above, then send
         message = message.encode('utf-8')
-        encypted_message = cipher_suite.encrypt(message)
-        message_header = f"{len(encypted_message):<{HEADER_LENGTH}}".encode('utf-8')
-        client_socket.send(message_header + encypted_message)
+
+        # Encrypting message using Fernet
+        encrypted = cipher.encrypt(message)
+        message_header = f"{len(encrypted):<{HEADER_LENGTH}}".encode('utf-8')
+
+        # Sending encrypted message
+        client_socket.send(message_header + encrypted)
 
     try:
         # Now we want to loop over received messages (there might be more than one) and print them
@@ -73,10 +77,11 @@ while True:
             message_length = int(message_header.decode('utf-8').strip())
             message = client_socket.recv(message_length).decode('utf-8')
 
-            decrypted_message = cipher_suite.decrypt(message).decode('utf-8')
+            # Decrypting message using Fernet Cipher Suite
+            decrypted = cipher.decrypt(message).decode('utf-8')
 
-            # Print message
-            print(f'{username} > {decrypted_message}')
+            # Print decrypted message
+            print(f'{username} > {decrypted}')
 
 
 

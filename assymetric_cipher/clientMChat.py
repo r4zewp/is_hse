@@ -30,17 +30,17 @@ username = my_username.encode('utf-8')
 username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')
 client_socket.send(username_header + username)
 
-# Загрузка приватного ключа из файла
-with open('PrivateKey.txt', 'rb') as private_key_file:
+# Reading Private Key from file
+with open('private.txt', 'rb') as private_key_file:
     private_key_pem = private_key_file.read()
     private_key = serialization.load_pem_private_key(
         private_key_pem,
-        password=None,  # Если приватный ключ защищен паролем, укажите его здесь
+        password=None, 
         backend=default_backend()
     )
 
-#Загрузка публичного ключа из файла
-with open('PublicKey.txt', 'rb') as public_key_file:
+# Reading Public Key from file
+with open('pub.txt', 'rb') as public_key_file:
     public_key_pem = public_key_file.read()
     public_key = serialization.load_pem_public_key(
         public_key_pem,
@@ -57,7 +57,8 @@ while True:
 
         # Encode message to bytes, prepare header and convert to bytes, like for username above, then send
         message = message.encode('utf-8')
-        # Шифрование данных
+
+        # Encrypting message
         encrypted_message = public_key.encrypt(
             message,
             padding.OAEP(
@@ -92,7 +93,7 @@ while True:
             message_length = int(message_header.decode('utf-8').strip())
             message = client_socket.recv(message_length)
 
-            # Дешифрование данных
+            # Decrypting message
             decrypted_message = private_key.decrypt(
                 message,
                 padding.OAEP(
